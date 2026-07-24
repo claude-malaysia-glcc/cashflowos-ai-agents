@@ -1,4 +1,4 @@
-# CashFlowOS Starter — your Money Robot 🤖💰
+# CashFlowOS AI Agents — your Money Robot 🤖💰
 
 > **You're not learning AI. You're hiring a robot employee.**
 > It watches your business river, files your paperwork, and asks before it touches money.
@@ -40,10 +40,10 @@ Four letters, in order. By **lunch on Day 1** you're through O, E and N.
 Paste this into Claude, turn the Chrome extension ON, and it walks you through every click:
 
 ```
-You're my hands-on setup co-pilot for CashFlowOS — my "Money Robot" web app.
+You're my hands-on setup co-pilot for CashFlowOS AI Agents — my "Money Robot" web app.
 I've never coded. Use the Chrome extension to open pages and do the clicks WITH me,
 ONE step at a time. Never type my passwords or secret keys — stop and let me do those.
-Start by opening https://github.com/claude-malaysia-glcc/cashflowos-starter and
+Start by opening https://github.com/claude-malaysia-glcc/cashflowos-ai-agents and
 helping me click "Use this template" to make my own copy. Then take me through
 O (database) → E (deploy + phone app) → N (bot) → Y (daily brief), one step at a time.
 ```
@@ -51,7 +51,7 @@ O (database) → E (deploy + phone app) → N (bot) → Y (daily brief), one ste
 ### The manual way (4 steps)
 
 **O — Organize** (give it a memory)
-1. Click **Use this template** on `github.com/claude-malaysia-glcc/cashflowos-starter` → make your own repo → clone it.
+1. Click **Use this template** on `github.com/claude-malaysia-glcc/cashflowos-ai-agents` → make your own repo → clone it.
 2. `npm install`, then `cp .env.example .env`.
 3. Make a **free** Supabase project. Open the **SQL Editor**, paste all of `supabase/schema.sql`, click **Run** (this builds your 5 tables + your private photo Vault, and seeds demo data so no tab is empty).
 4. In `.env`, fill `SUPABASE_URL` (Settings → Data API → Project URL, **base URL only**) and `SUPABASE_SERVICE_ROLE_KEY` (Settings → API Keys → service_role → Reveal). Also make up an `APP_PASSCODE` — that's your app's door lock.
@@ -64,10 +64,36 @@ O (database) → E (deploy + phone app) → N (bot) → Y (daily brief), one ste
 **N — Navigate** (give it a mouth + its first robot)
 8. Telegram: `@BotFather` → `/newbot` for a token · `@userinfobot` for your numeric ID.
 9. In **Vercel** add `ANTHROPIC_API_KEY` + the Telegram keys + a made-up `CRON_SECRET` → **Redeploy** (env changes need a redeploy).
-10. `npm run webhook:set -- https://YOUR-APP.vercel.app` → press **Start** in your bot → ask it *"how much cash in this week?"*. The **Expense agent is already ON**: send a small receipt (auto-files ✅) and one over RM200 (it asks 🙋).
+10. `npm run webhook:set -- https://YOUR-APP.vercel.app` → press **Start** in your bot → send `/help` to see everything it can do, then ask it *"how much cash in this week?"*. The **Expense agent is already ON**: send a small receipt (auto-files ✅) and one over RM200 (it asks 🙋). Full capability list below in **🤖 Meet Jarvis**.
 
 **Y — Yield** (give it an alarm clock)
 11. Your daily brief is scheduled (`vercel.json` — every morning it texts you the funnel + the money + what needs your YES). One cron slot used; the second is reserved on purpose (Vercel Hobby allows two).
+
+---
+
+## 🤖 Meet Jarvis — the agentic Telegram bot
+
+Jarvis isn't just a money Q&A bot anymore. It now answers a wide range of ops questions **and** can take safe actions through the same approval engine that files your receipts.
+
+Send `/help` any time for its capability card:
+
+```
+💰 Money — "cash in this week?" · "who owes me?" · "overdue invoices?"
+🏞️ Pipeline — "open leads?" · "pipeline value?" · "pending vs won?"
+✅ Tasks — "what's due this week?" · "add task: chase supplier Friday"
+📣 Content — "what's scheduled?"
+🤝 People — "who do I follow up with?"
+🚨 Triage — "what needs my attention today?"
+```
+
+And it can **DO** things, through the same dial as every robot in here:
+- 🟢 **Small stuff it just does** — add a task, add a lead, log a small expense — always with an `/undo`.
+- 🟡 **Money stuff it proposes** — log cash in, mark an invoice paid, move a lead's stage, an expense over your line — you tap ✅ Approve before anything writes.
+- 🔴 **It never messages your customers.** Ask it to draft a follow-up and it hands you copy-paste text — there's no send button in its hands.
+
+Ask it multi-part questions — *"who do I need to chase, and how much do they owe me?"* — and it chains tool calls to answer both halves. It remembers the last few turns too, so *"...and last month?"* just works.
+
+Every question, every action, every zone, with example answers — that's the facilitator/demo script at **[`docs/bot-playbook.md`](./docs/bot-playbook.md)**.
 
 ---
 
@@ -138,11 +164,11 @@ app/            the 10 tabs + Telegram webhook + daily cron + passcode gate (pro
 lib/            the shared spine — Supabase, records, the CAS approval engine, vision
 agents/         vault (photo→file) · expense (ships ON) · _template (your 4 knobs) · gallery (7)
 scripts/        import.mjs · set-webhook.mjs · webhook-info.mjs   (all pure Node — Mac + Windows)
-docs/           the framework, the canvas, the checklists, the sell-it one-pager, sample CSV
+docs/           the framework, the canvas, the checklists, the bot playbook, the sell-it one-pager, sample CSV
 supabase/       schema.sql — paste once, run once
 ```
 
-The complete build contract lives in **[BUILD-SPEC.md](./BUILD-SPEC.md)**.
+The complete build contract lives in **[BUILD-SPEC-V2.md](./BUILD-SPEC-V2.md)**.
 
 ---
 © Claude Malaysia · Use this template → make it yours. Your data stays in **your** Supabase and your gitignored `.env` — this repo is code only.

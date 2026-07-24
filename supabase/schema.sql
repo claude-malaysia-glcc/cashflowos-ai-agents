@@ -154,7 +154,33 @@ select * from (values
   ('Follow up Keith',            'open',         0, 'task',    current_date + 2,  'Send proposal recap',                '{}'::jsonb),
   ('Send July invoices',         'open',         0, 'task',    current_date - 1,  'OVERDUE',                            '{}'::jsonb),
   -- ---- Doc ----
-  ('SSM registration cert',      'filed',        0, 'doc',     null,              'Company docs',                       '{"kind":"doc"}'::jsonb)
+  ('SSM registration cert',      'filed',        0, 'doc',     null,              'Company docs',                       '{"kind":"doc"}'::jsonb),
+  -- ---- Leads (more): full funnel spread, deal values RM3,000-RM15,000 ----
+  ('Farah Ismail — Ismail Consulting', 'new',          4500, 'lead', current_date + 6,  'From IG DM',                           '{"customer":"Farah Ismail","next":"qualify","source":"ig"}'::jsonb),
+  ('Danial Haikal — Haikal Motors',    'new',          3000, 'lead', current_date + 4,  'Referred by Aisha',                    '{"customer":"Danial Haikal","next":"send info pack","source":"referral"}'::jsonb),
+  ('Farid Hassan — Hassan Logistics',  'contacted',    7500, 'lead', current_date + 8,  'Replied to follow-up, wants pricing',  '{"customer":"Farid Hassan","next":"send quote","source":"ad"}'::jsonb),
+  ('Priya Nair — Nair Dental',         'appointment',  9000, 'lead', current_date + 3,  'Demo booked Tuesday 11am',             '{"customer":"Priya Nair","next":"run demo","source":"referral"}'::jsonb),
+  ('Chong Wei Jian — CWJ Auto',        'appointment', 12000, 'lead', current_date + 5,  'Discovery call scheduled',             '{"customer":"Chong Wei Jian","next":"discovery call","source":"ig"}'::jsonb),
+  ('Rajesh Kumar — Kumar Textiles',    'closed',      15000, 'lead', current_date - 2,  'Signed — biggest deal this month',     '{"customer":"Rajesh Kumar","next":"onboard","source":"ad"}'::jsonb),
+  ('Siti Aminah — Aminah Boutique',    'nurture',      3500, 'lead', current_date + 30, 'Not ready yet, check back next month', '{"customer":"Siti Aminah","next":"monthly check-in","source":"referral"}'::jsonb),
+  -- ---- Cash In (more): 2 overdue + 2 paid, so "who owes me" always has real answers ----
+  ('Invoice #021 — Zul Hardware', 'pending', 1800, 'cash_in', current_date - 5,  'OVERDUE — 5 days, send reminder',  '{"customer":"Zul Hardware"}'::jsonb),
+  ('Invoice #022 — Nur Trading',  'pending', 4200, 'cash_in', current_date - 12, 'OVERDUE — 12 days, call urgently', '{"customer":"Nur Trading"}'::jsonb),
+  ('Invoice #023 — Sunrise Cafe', 'paid',    2600, 'cash_in', current_date - 4,  'Paid on time',                     '{"customer":"Sunrise Cafe"}'::jsonb),
+  ('Invoice #024 — Bina Jaya',    'paid',    3900, 'cash_in', current_date - 10, 'Settled via bank transfer',        '{"customer":"Bina Jaya"}'::jsonb),
+  -- ---- Tasks (more): today / this week / next week, so "what's due" always has all three ----
+  ('Call Farah Ismail — confirm scope', 'open', 0, 'task', current_date,      'Due today',     '{"owner":"Kingsley"}'::jsonb),
+  ('Prep workshop slides',              'open', 0, 'task', current_date + 3,  'Due this week', '{"owner":"Amirah"}'::jsonb),
+  ('Quarterly review — Caremetic',      'open', 0, 'task', current_date + 10, 'Due next week', '{"owner":"Kingsley"}'::jsonb),
+  -- ---- Content (more): posted / scheduled / draft, exact meta shape the bot reads ----
+  ('Reel — client testimonial',    'posted',    0, 'content', current_date - 4, 'Posted to IG',        '{"platform":"instagram","format":"reel","views":4200}'::jsonb),
+  ('TikTok — quick tip video',     'scheduled', 0, 'content', current_date + 2, 'Queued for TikTok',    '{"platform":"tiktok","format":"video"}'::jsonb),
+  ('Carousel — pricing breakdown', 'draft',     0, 'content', null,             'Still drafting copy', '{"platform":"instagram","format":"carousel"}'::jsonb),
+  -- ---- Customers (more): gone quiet, so "who's gone cold" always has real answers ----
+  -- NOTE: last_contact is a HARDCODED ISO date string (jsonb can't do date math inline) —
+  -- set ~12-20 days before a typical class/demo date of 2026-07-28. Refresh if reused later.
+  ('Nurul Trading Co',  'active', 1200, 'customer', current_date + 2, 'Gone quiet — no reply in weeks',  '{"company":"Nurul Trading Co","last_contact":"2026-07-16","next":"send check-in message"}'::jsonb),
+  ('Zaidi Enterprises', 'active',  800, 'customer', current_date + 5, 'No response since last invoice', '{"company":"Zaidi Enterprises","last_contact":"2026-07-08","next":"call to re-engage"}'::jsonb)
 ) as seed(title, status, amount, category, due_date, notes, meta)
 where not exists (select 1 from records);
 

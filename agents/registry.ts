@@ -179,6 +179,67 @@ async function fileReceipt(agentKey: string, payload: any): Promise<any> {
   return result
 }
 
+// ---- writeRecord: the bot ACTION-tool write (V2) ---------------------------
+// The Jarvis action tools (add task / add lead / log cash-in / mark invoice paid /
+// update lead stage) all funnel through here — AFTER a 🟡 approval or a 🟢 autopilot
+// claim (the CAS in lib/actions.ts guarantees once-only). Two shapes:
+//   • op:'insert' → writes a new `records` row and returns record_id (so /undo can
+//     post a reversal exactly like a filed receipt).
+//   • op:'update' → flips a status (+ optional meta) on an existing row (mark paid,
+//     move a lead stage). Idempotent: setting an already-'paid' row to 'paid' is a
+//     no-op net change.
+// Nothing here sends a message, moves money, or deletes — the 🔴 NEVER zone does not
+// live here, same guarantee as fileReceipt/draftOnly.
+async function writeRecord(agentKey: string, payload: any): Promise<any> {
+  if (!supabaseConfigured) throw new Error('Supabase not configured — cannot write this yet.')
+  const op = String(payload?.op || 'insert')
+
+  if (op === 'update') {
+    const recordId = Number(payload?.record_id)
+    if (!Number.isFinite(recordId)) throw new Error('update needs a numeric record_id')
+    const patch: Record<string, any> = {}
+    if (payload?.status != null) patch.status = String(payload.status)
+    if (payload?.meta && typeof payload.meta === 'object') patch.meta = payload.meta
+    if (Object.keys(patch).length === 0) throw new Error('nothing to update')
+    const { data, error } = await supabase.from('records').update(patch).eq('id', recordId).select()
+    if (error) throw new Error(`could not update the record: ${error.message}`)
+    const row = data?.[0]
+    if (!row) throw new Error(`no record #${recordId} to update`)
+    const result = {
+      kind: 'record_updated',
+      record_id: recordId,
+      title: row.title,
+      status: row.status,
+      category: row.category,
+    }
+    await logRun(agentKey, 'ok', result)
+    return result
+  }
+
+  // op:'insert' — a new business row (task / lead / cash_in).
+  const title = String(payload?.title || '').trim() || 'Untitled'
+  const category = String(payload?.category || 'task')
+  const rawAmount = Number(payload?.amount)
+  const amount = Number.isFinite(rawAmount) && rawAmount > 0 ? rawAmount : 0
+  const { data, error } = await supabase
+    .from('records')
+    .insert({
+      title,
+      status: String(payload?.status || 'open'),
+      amount,
+      category,
+      due_date: payload?.due_date || null,
+      notes: payload?.note || 'Added via Jarvis 🤖',
+      meta: { ...(payload?.meta || {}), source: 'jarvis' },
+    })
+    .select()
+  if (error) throw new Error(`could not add the ${category}: ${error.message}`)
+  const recordId = data?.[0]?.id ?? null
+  const result = { kind: 'record_created', record_id: recordId, title, category, amount }
+  await logRun(agentKey, 'ok', result)
+  return result
+}
+
 // ---- draftOnly: the gallery agents ----------------------------------------
 // Produces a DRAFT the human reads and sends. There is deliberately no send here —
 // customer-facing messages are 🔴 NEVER-zone. Returns the draft; logs the run.
@@ -199,6 +260,13 @@ export const EXECUTORS: Record<string, Executor> = {
   // threshold specialisation). Both file into the ONE records table.
   vault: (p) => fileReceipt('vault', p),
   expense: (p) => fileReceipt('expense', p),
+  // The Jarvis bot ACTION tools (V2) — all write through writeRecord, all pass the
+  // same CAS/approval funnel. 🟢 add-task/add-lead autopilot; 🟡 the rest ask first.
+  'add-task': (p) => writeRecord('add-task', p),
+  'add-lead': (p) => writeRecord('add-lead', p),
+  'log-cash-in': (p) => writeRecord('log-cash-in', p),
+  'mark-paid': (p) => writeRecord('mark-paid', p),
+  'lead-status': (p) => writeRecord('lead-status', p),
   // The gallery agents — all DRAFT-only (a human sends).
   'overdue-invoice': (p) => draftOnly('overdue-invoice', p),
   'cold-lead': (p) => draftOnly('cold-lead', p),
