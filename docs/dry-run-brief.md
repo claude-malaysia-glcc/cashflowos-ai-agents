@@ -1,4 +1,4 @@
-# CashFlowOS Starter — Dry-Run Brief for Yong
+# CashFlowOS AI Agents — Dry-Run Brief for Yong
 
 **Repo:** https://github.com/claude-malaysia-glcc/cashflowos-starter (Use this template → your own copy)
 **Your job:** be a paying founder at the **Cashflow OS 2-Day Challenge** and build the whole **Money Robot** A→Z — twice (Day 1 ships it; Day 2 you build your own agent + try to break it). Find the walls *before* the room of 7 founders does.

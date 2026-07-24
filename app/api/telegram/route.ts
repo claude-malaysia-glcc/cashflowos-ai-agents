@@ -61,7 +61,7 @@ const MAX_FILE_BYTES = 8 * 1024 * 1024 // ~8 MB — reject bigger BEFORE downloa
 // The /start + /help capability card. Mirrors the read tools (bot-tools.ts) and the
 // action tools (bot-actions.ts) so the owner knows what to ask. Telegram HTML.
 const HELP_CARD =
-  `🤖 <b>I run your CashFlowOS.</b> Ask me anything from your records:\n\n` +
+  `🤖 <b>CashFlowOS AI Agents</b> — I run your business from your records. Ask me anything:\n\n` +
   `💰 <b>Money</b> — "cash in this week?" · "who owes me?" · "overdue invoices?"\n` +
   `🏞️ <b>Pipeline</b> — "open leads?" · "pipeline value?" · "pending vs won?"\n` +
   `✅ <b>Tasks</b> — "what's due this week?"\n` +

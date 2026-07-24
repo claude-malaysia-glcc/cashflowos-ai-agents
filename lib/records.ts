@@ -51,6 +51,19 @@ export const rm = (n: number) => 'RM ' + Number(n || 0).toLocaleString('en-MY')
 // Today as YYYY-MM-DD (for due-date comparisons + seeds).
 export const todayISO = () => new Date().toISOString().slice(0, 10)
 
+// How many proposals are waiting for a YES right now (status 'proposed', unexpired).
+// Powers the 🙋 sidebar badge. Returns 0 before Supabase is wired (no hang).
+export async function getPendingCount(): Promise<number> {
+  if (!supabaseConfigured) return 0
+  const { count, error } = await supabase
+    .from('agent_actions')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'proposed')
+    .gt('expires_at', new Date().toISOString())
+  if (error) return 0
+  return count ?? 0
+}
+
 // ============================================================
 // THE FUNNEL — the whole-business river the Dashboard + morning brief show.
 // Views → Leads → Appointments → Closed → Nurture.

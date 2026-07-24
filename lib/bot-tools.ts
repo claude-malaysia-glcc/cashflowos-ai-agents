@@ -356,7 +356,8 @@ export function runBotTool(name: string, input: any, rows: Rec[]): string {
       )
       const out = people
         .map(r => {
-          const last = r.meta?.last_contact || r.created_at?.slice(0, 10) || null
+          // Accept either meta key — last_contact (new) or last_touch (V1/real data).
+          const last = r.meta?.last_contact || r.meta?.last_touch || r.created_at?.slice(0, 10) || null
           const days = last ? Math.floor((today - Date.parse(last)) / 86_400_000) : 999
           return {
             name: r.meta?.customer || r.title,

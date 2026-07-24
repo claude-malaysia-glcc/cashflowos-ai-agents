@@ -100,7 +100,7 @@ So every /help question demos well on a fresh clone: leads in **every** funnel s
 - Event-guide P-prompts: P1 repo URL → new repo; P5 test lines gain 3 agentic tests (add-task autopilot, mark-paid approval, draft-followup never-sends).
 
 ## 6 · Acceptance (V2 additions on top of V1's 11)
-12. Bot answers all **10 GLCC-style questions** from §4b against seed data.
+12. Bot answers the full set of **GLCC-style ops questions** from §4b (money · pipeline · tasks · content · people · triage) against seed data.
 13. `add_task` → 🟢 auto-runs, `/undo` reverses it.
 14. `mark_invoice_paid` → 🟡 proposal + buttons; double-tap Approve → "already handled".
 15. `draft_followup` → returns text; grep proves no send path exists.

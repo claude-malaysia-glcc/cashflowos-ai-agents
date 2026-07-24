@@ -1,4 +1,4 @@
-# Acceptance Log — CashFlowOS Starter
+# Acceptance Log — CashFlowOS AI Agents
 
 Walk of **BUILD-SPEC §10** acceptance tests, run at the Final Integration step.
 

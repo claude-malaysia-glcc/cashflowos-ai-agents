@@ -1,5 +1,5 @@
 -- ============================================================
--- CASHFLOWOS STARTER — your Money Robot's database.
+-- CASHFLOWOS AI AGENTS — your Money Robot's database.
 -- Paste this WHOLE block into the Supabase SQL Editor (your own free project)
 -- and click Run once. Safe to re-run: it never duplicates or deletes your rows
 -- (create-if-not-exists · add-column-if-not-exists · seeds guarded by NOT EXISTS).
@@ -144,8 +144,8 @@ select * from (values
   ('Beta Trading',               'closed',    3200, 'lead',   null,              'Won — moving to onboarding',         '{"next":"onboard","potential":3200}'::jsonb),
   ('Mei Wong — cold',            'nurture',   2000, 'lead',   current_date + 20, 'Went quiet — long-term nurture',     '{"next":"monthly check-in","potential":2000}'::jsonb),
   -- ---- Customers ----
-  ('Beta Trading',               'active',       0, 'customer', null,            'Onboarding this week',               '{"owes":0,"last_touch":"2026-07-20","next":"kickoff call"}'::jsonb),
-  ('Caremetic Sdn Bhd',          'active',    1500, 'customer', current_date + 7,'Retainer client',                    '{"owes":1500,"last_touch":"2026-07-18","next":"send report"}'::jsonb),
+  ('Beta Trading',               'active',       0, 'customer', null,            'Onboarding this week',               '{"owes":0,"company":"Beta Trading","last_touch":"2026-07-20","next":"kickoff call"}'::jsonb),
+  ('Caremetic Sdn Bhd',          'active',    1500, 'customer', current_date + 7,'Retainer client',                    '{"owes":1500,"company":"Caremetic Sdn Bhd","last_touch":"2026-07-18","next":"send report"}'::jsonb),
   -- ---- Content (marketing calendar; meta.views drives the funnel's Views) ----
   ('Reel: 3 ways AI saves time', 'posted',       0, 'content', current_date - 2, 'Best performer',                     '{"platform":"IG","format":"reel","views":12000}'::jsonb),
   ('Case study carousel',        'scheduled',    0, 'content', current_date + 3, 'For LinkedIn',                       '{"platform":"LinkedIn","format":"carousel","views":0}'::jsonb),

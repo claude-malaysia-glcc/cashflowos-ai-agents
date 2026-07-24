@@ -52,7 +52,7 @@ export default async function Tasks() {
               return (
                 <tr key={r.id}>
                   <td data-label="Task">{r.title}</td>
-                  <td data-label="Due" style={od ? { color: '#ff9b9b' } : undefined}>
+                  <td data-label="Due" style={od ? { color: 'var(--rust)' } : undefined}>
                     {r.due_date ?? '—'}
                   </td>
                   <td data-label="Status">
