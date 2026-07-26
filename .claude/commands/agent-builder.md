@@ -93,7 +93,7 @@ Use the drawers **you discovered in Step 0**, not a canned list. Show them their
 
 > **What should it keep an eye on?**
 >
-> Here's what's in your business right now:
+> Here's what's actually in your business right now:
 > [list their real categories + counts, e.g. "leads (12) · unpaid invoices (4) · tasks (3) · content (3)"]
 > [if they added their own tab on Day 1, name it here too]
 >
@@ -104,8 +104,97 @@ Use the drawers **you discovered in Step 0**, not a canned list. Show them their
 HARD GATE.
 
 Translate their words into a filter over `records`. If they name something that isn't a
-category yet, that's fine — ask which drawer it lives in, or offer to store it under a new
-category (and mention they can add a matching tab later).
+category yet, ask which drawer it lives in, or store it under a new category (and mention
+they can add a matching tab later).
+
+---
+
+### Q3b — ⚠️ IF THAT DRAWER IS EMPTY (or only has demo data) — DON'T SKIP THIS
+
+**A robot watching an empty drawer looks broken.** They'll type `/[key]`, get *"nothing needs
+you right now,"* and think they built a dud. Fix it here, before you write any code.
+
+If the drawer they picked has **0–2 real rows**, or everything in it is seed/demo data, say:
+
+> **Hold on — that drawer's empty right now.**
+>
+> Your robot needs something real to look at, or it'll have nothing to show you.
+>
+> **Where does that info live today?**
+>
+> 1. **A Google Sheet**
+> 2. **A file on my computer** (Excel / CSV)
+> 3. **Another app** — my CRM, accounting, Stripe, an invoicing tool
+> 4. **Honestly? In my head / WhatsApp / on paper**
+>
+> *1, 2, 3 or 4?*
+
+HARD GATE. Then take the matching route:
+
+#### Route 1 — Google Sheet → ✅ real auto-refresh (the best outcome)
+This is the one that genuinely keeps itself up to date, with no OAuth and no paid tools.
+
+1. Walk them: **File → Share → Publish to web → [their tab] → Comma-separated values (.csv) → Publish**, then copy the URL.
+2. Ask which column is what (their headers rarely match ours): *"Which column is the name? The amount? The due date?"*
+3. Build `app/api/sync/route.ts` — fetch that CSV, map their columns to
+   `title · category · amount · status · due_date · notes` (+ anything else → `meta`), then insert.
+4. **Wire the three things that make it safe** (all three, or it breaks):
+   - **Dedupe.** Give every synced row a stable `meta.source_id` (their sheet's row id, invoice
+     no, or a hash of the key columns). Read the existing `source_id`s first and only insert
+     new ones — **otherwise every sync duplicates the whole sheet, every day.**
+   - **Guard it.** Same fail-closed `Authorization: Bearer $CRON_SECRET` check as `/api/cron-daily`.
+   - **Un-gate it.** Add `api/sync` to the matcher exclusions in `proxy.ts` — miss this and the
+     route 307-redirects to `/login` and silently never runs.
+5. Schedule it in the **reserved 2nd cron slot** in `vercel.json` (Hobby allows exactly 2, daily only):
+   ```json
+   { "path": "/api/sync", "schedule": "0 0 * * *" }
+   ```
+6. Run it once by hand so their data is in **now**, and show them what landed.
+
+> Tell them plainly: *"Update your sheet like you always do — your robot re-reads it every morning."*
+
+#### Route 2 — File on their computer → one command, manual refresh
+```bash
+npm run import -- ~/path/to/their-file.csv
+```
+Map their headers first if they differ. Be honest: **this is a one-time load** — they re-run it
+whenever the file changes. If they'd rather it refresh itself, offer to move the file into
+Google Sheets and use Route 1.
+
+#### Route 3 — Another app → depends on whether it can push or export
+Ask: *"Can that app send a webhook, or can you export a CSV from it?"*
+- **Webhook** (Stripe, GHL, Tally, most form tools, Zapier/Make) → build `app/api/intake/route.ts`
+  that accepts a POST and writes one record. Same three rules as Route 1 (dedupe on their event
+  id, shared-secret guard, **add `api/intake` to the `proxy.ts` matcher**). Give them the URL to
+  paste into that app. This refreshes **instantly**, on every event.
+- **Export only** → Route 2, plus add a task so they don't forget: *"add task: re-import
+  [source] every Monday"*.
+- **Don't invent an integration.** If the app has no webhook and no export, say so and use Route 4.
+
+#### Route 4 — It's in their head → get it in RIGHT NOW (30 seconds)
+Best move in the room. Ask for real examples, out loud:
+
+> **Just tell me 3 real ones.**
+>
+> [for money owed] *"Who owes you? Name, how much, when it was due."*
+> [for leads] *"Name 3 people you're chasing, roughly what each is worth."*
+> [for tasks] *"3 things on your plate and when they're due."*
+
+Then write them straight in — inline JSON, no file needed:
+```bash
+npm run import -- '[{"title":"Invoice — Lai Holdings","category":"cash_in","amount":2400,"status":"waiting","due_date":"2026-07-15","customer":"Lai Holdings"}]'
+```
+Any column that isn't core (like `customer`) lands in `meta` automatically — which is exactly
+what the draft in `prompt.ts` reads, so their names show up in the message.
+
+Then tell them how it stays fed from now on:
+> *"From here just tell the bot — 'add lead Angela 8000', 'log RM45 Grab'. It goes straight in."*
+
+---
+
+**Whatever route they take: confirm the drawer is no longer empty before you continue.**
+Re-run your Step 0 count and say *"Right — [N] real [things] in there now. Your robot has
+something to work with."* Then go to Q4.
 
 ### Q4 — SUGGEST — what should it prepare? (knob 2)
 
@@ -311,7 +400,8 @@ If it found work, tell them to tap **✅ Approve** on one. Then confirm the thre
 
 **If nothing arrives**, check in this order (fix silently, don't panic them):
 - Is it in the **SCHEDULED** array? (the #1 cause — `/[key]` reads from there)
-- Does `lookAt` match any rows today? If their data is empty, seed one matching row so the demo fires.
+- Does `lookAt` match any rows today? If the drawer is empty, go back to **Q3b** and get real data in — don't just shrug at "nothing needs you right now."
+- If they connected a source: did `/api/sync` get added to the **`proxy.ts` matcher**? (un-excluded routes 307 to `/login` and fail silently)
 - Are `TELEGRAM_ALLOWED_USER_IDS` / `OWNER_CHAT_ID` set in Vercel — and did they **redeploy** after adding env vars?
 - Did the deploy actually finish?
 
@@ -337,8 +427,10 @@ Say the sentence out loud:
 
 ## RULES (non-negotiable)
 
-- **Only the 4 knobs change.** `executor.ts` is locked 🔒. Never write a send/post/delete call into any agent.
+- **Only the 4 knobs change** in an agent. `executor.ts` is locked 🔒. Never write a send/post/delete call into any agent.
 - **Never edit** `app/api/telegram/route.ts` or `app/api/cron-daily/route.ts` — the `/name` command and the 🟢/🟡 dial already live there. Registering in `SCHEDULED` is enough.
+- **Connecting a data source is different** — there you MAY create new routes (`app/api/sync/`, `app/api/intake/`) and edit `proxy.ts` + `vercel.json`. Every new public route needs all three: a secret guard, a `proxy.ts` matcher exclusion, and dedupe on a stable `meta.source_id`.
+- **Never let a sync run without dedupe.** A daily sync with no `source_id` check re-inserts the whole source every day. Check before you schedule.
 - **The robot DRAFTS. The human SENDS.** Auto-send to customers is welded shut, on every setting.
 - **Wire all three registry spots.** AGENTS + EXECUTORS + SCHEDULED.
 - **Default to 🟡** and always offer the graduation path. Never set 🟢 without them choosing it.
