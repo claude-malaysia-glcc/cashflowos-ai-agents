@@ -2,8 +2,8 @@ import Anthropic from '@anthropic-ai/sdk'
 import { supabase, supabaseConfigured } from '@/lib/supabase'
 import { sendMessage } from '@/lib/telegram'
 import { getRecords, getFunnel, rm, todayISO, type Rec } from '@/lib/records'
-import { propose, proposeAndNotify } from '@/lib/actions'
-import { SCHEDULED } from '@/agents/registry'
+import { propose, proposeAndNotify, runAutopilot } from '@/lib/actions'
+import { SCHEDULED, type ProposalDraft } from '@/agents/registry'
 
 // 🔒 Don't edit — this keeps your robot safe.
 // THE ONE daily cron (Vercel Hobby allows 2; we ship 1, reserve the other).
@@ -83,7 +83,7 @@ export async function GET(req: Request) {
   const owner = process.env.OWNER_CHAT_ID?.trim()
   let created = 0
   for (const agent of SCHEDULED) {
-    let drafts: { idempotencyKey: string; payload: any; text: string }[] = []
+    let drafts: ProposalDraft[] = []
     try {
       drafts = agent.check(rows, today)
     } catch (e) {
@@ -91,7 +91,24 @@ export async function GET(req: Request) {
       continue
     }
     for (const d of drafts) {
-      // With an owner we surface the buttons to them; otherwise just record the
+      // 🟢 GRADUATED (auto) — the owner has taught this one; run it once, then tell
+      // them. Still the same claim-check funnel, still undoable, still audited.
+      if (d.auto) {
+        const done = await runAutopilot(agent.key, d.payload)
+        if (done) {
+          created++
+          if (owner) {
+            await sendMessage(
+              owner,
+              `🟢 <b>${agent.label}</b> handled this for you: ${d.text}\n` +
+                `Reply <code>/undo-${done.row.id}</code> within 24h to reverse.`,
+            )
+          }
+        }
+        continue
+      }
+      // 🟡 ASK-FIRST (the default) — create the proposal and surface the buttons.
+      // With an owner we send the buttons to them; otherwise just record the
       // proposal (it still shows on the Approvals tab). Either way: create, not run.
       const row = owner
         ? await proposeAndNotify({

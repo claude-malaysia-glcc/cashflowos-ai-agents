@@ -15,6 +15,7 @@ import { claim, executeClaimed, summarizeResult, undoAction, runAutopilot, propo
 import { readImage, type VisionResult } from '@/lib/vision'
 import { BOT_TOOLS, runBotTool } from '@/lib/bot-tools'
 import { BOT_ACTION_TOOLS, ACTION_TOOL_NAMES, runBotAction } from '@/lib/bot-actions'
+import { SCHEDULED } from '@/agents/registry'
 import { logRun } from '@/lib/runs'
 
 // 🔒 Don't edit — this keeps your robot safe.
@@ -240,6 +241,24 @@ async function handleMessage(msg: any): Promise<Response> {
     return Response.json({ ok: true })
   }
 
+  // /<agent-key> — call ONE robot by name, on demand. Runs the exact same check()
+  // the morning cron runs, so the buttons show up now instead of tomorrow 9am.
+  // (/start, /help and /undo are matched above, so they never reach this.)
+  const agentCmd = text.match(/^\/([a-z0-9][a-z0-9_-]*)/i)
+  if (agentCmd) {
+    const asked = agentCmd[1].toLowerCase().replace(/_/g, '-')
+    const agent = SCHEDULED.find(
+      a => a.key === asked || a.key.replace(/-/g, '') === asked.replace(/-/g, ''),
+    )
+    if (agent) {
+      await sendMessage(chatId, `🤖 Running <b>${agent.label}</b> now…`)
+      after(() =>
+        runAgentNow(agent, chatId).catch(e => console.error('[CFO] on-demand agent threw:', e)),
+      )
+      return Response.json({ ok: true })
+    }
+  }
+
   // Plain question → the tool-using loop (the course's foundational agent loop):
   // Claude picks a read tool, the SERVER runs it against your records, the grounded
   // result comes back, Claude answers. Degrade calmly with no API key.
@@ -253,6 +272,57 @@ async function handleMessage(msg: any): Promise<Response> {
   await appendTurn(chatId, text, answer)
   await sendMessage(chatId, answer)
   return Response.json({ ok: true })
+}
+
+// ============================================================
+// runAgentNow — fire ONE scheduled robot on demand (the /<agent-key> command).
+// Same check() the cron sweeps, same claim-check funnel, same idempotency key —
+// so calling it twice in a day can't create the same proposal twice. Runs inside
+// after(), so Telegram already got its 200.
+// ============================================================
+async function runAgentNow(
+  agent: (typeof SCHEDULED)[number],
+  chatId: number,
+): Promise<void> {
+  const rows = await getRecords()
+  let drafts: { idempotencyKey: string; payload: any; text: string; auto?: boolean }[] = []
+  try {
+    drafts = agent.check(rows, todayISO())
+  } catch (e) {
+    console.error(`[CFO] scheduled check "${agent.key}" threw:`, e)
+    await sendMessage(chatId, `⚠️ ${agent.label} hit an error — it's logged, nothing was done.`)
+    return
+  }
+  if (drafts.length === 0) {
+    await sendMessage(chatId, `✅ <b>${agent.label}</b>: nothing needs you right now.`)
+    return
+  }
+  let created = 0
+  for (const d of drafts) {
+    if (d.auto) {
+      const done = await runAutopilot(agent.key, d.payload)
+      if (done) {
+        created++
+        await sendMessage(
+          chatId,
+          `🟢 <b>${agent.label}</b> handled it: ${d.text}\n` +
+            `Reply <code>/undo-${done.row.id}</code> within 24h to reverse.`,
+        )
+      }
+    } else {
+      const row = await proposeAndNotify({
+        agentKey: agent.key,
+        idempotencyKey: d.idempotencyKey,
+        payload: d.payload,
+        chatId,
+        text: d.text,
+      })
+      if (row) created++
+    }
+  }
+  if (created === 0) {
+    await sendMessage(chatId, `👍 <b>${agent.label}</b>: already handled today — nothing new.`)
+  }
 }
 
 // ============================================================

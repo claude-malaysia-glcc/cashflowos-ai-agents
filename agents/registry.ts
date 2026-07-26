@@ -292,7 +292,9 @@ export const EXECUTORS: Record<string, Executor> = {
 import type { Rec } from '@/lib/records'
 import { rm } from '@/lib/records'
 
-export type ProposalDraft = { idempotencyKey: string; payload: any; text: string }
+// `auto: true` = this one is 🟢 graduated (autopilot: run it, then just tell me).
+// Omitted/false = 🟡 ask first (the safe default every agent starts on).
+export type ProposalDraft = { idempotencyKey: string; payload: any; text: string; auto?: boolean }
 export type ScheduledCheck = {
   key: string
   label: string
