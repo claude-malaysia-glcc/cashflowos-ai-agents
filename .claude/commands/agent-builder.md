@@ -1,5 +1,5 @@
 ---
-description: "Interview me for 6 answers and build my own named AI agent — live in Telegram, callable by /name, with Approve/Reject buttons and a graduation path to full autopilot."
+description: "Interview me for 6 answers and build my own named AI agent — live in Telegram, callable by /name, with Approve/Reject buttons, a graduation path to autopilot, and a driven end-to-end test at the end."
 ---
 
 # /agent-builder — Hire YOUR AI Employee (live in Telegram)
@@ -407,6 +407,66 @@ If it found work, tell them to tap **✅ Approve** on one. Then confirm the thre
 
 ---
 
+## FINAL CHECK — I drive it myself 🕹️
+
+**Only start this once everything above is done and deployed.** Not before — a half-built
+agent will fail the test for the wrong reasons.
+
+Offer it:
+
+> **Want me to take the wheel and test it properly?**
+>
+> I'll open Telegram on this computer, run your robot, tap the buttons, and check it all
+> the way through — so you *know* it works instead of hoping.
+>
+> *yes / I'll do it myself*
+
+HARD GATE.
+
+If they say yes, pick the right tool for how Telegram is running:
+
+| Where Telegram is | Use | Why |
+|---|---|---|
+| **Telegram Desktop app** (macOS/Windows) | **computer-use** — `request_access` for Telegram first | Native app, no DOM |
+| **web.telegram.org** in a browser | **Claude-in-Chrome extension** | computer-use can only *see* browsers, it can't click in them |
+| **Only on their phone** | **They drive, you narrate** | You can't reach their phone — read them each step and ask what they saw |
+
+### The 5 checks (run in order, screenshot each result)
+
+1. **The command is there** — open the chat, type `/` and confirm `[key]` appears in the menu
+   (that's the `setMyCommands` step). Then send `/[key]`.
+2. **It runs** — `🤖 Running [Name] now…` comes back within a few seconds.
+3. **The proposal is real** — a card arrives with **✅ Approve** and **❌ Reject**, and the text
+   contains their **actual** customer name / amount — not a placeholder. This is the one that
+   proves the data connection from Q3 worked.
+4. **Approve executes exactly once** — tap **✅**. Confirm: the toast says approved, the buttons
+   disappear from the card, and the finished draft comes back.
+5. **The memory holds** — send `/[key]` again straight away. It must say
+   *"already handled today — nothing new."* **That's their idempotency window (Q3's memory
+   answer) working in front of them.**
+
+Then confirm it landed in the app: the **Approvals** tab shows it with a full audit trail.
+
+### Rules while you're driving (non-negotiable)
+
+- **Only touch the proposal your test just created.** Their queue may hold **real** pending
+  items — approving one of those executes it for real. Never tap a card you didn't just cause.
+- **Never type their password, 2FA code, or any secret.** If Telegram asks them to log in,
+  stop and hand the keyboard back.
+- **Don't send anything to a customer.** You're only ever in the bot chat.
+- **Screenshot each check** — that's their proof, and yours.
+
+### If a check fails
+
+Fix it, redeploy, and **re-run the test from check 1** — don't declare success on a partial
+pass. Most common causes, in order: not in `SCHEDULED` · `lookAt` matches nothing (go back to
+**Q3b**) · env vars added to Vercel without a redeploy · deploy not finished.
+
+Report at the end in one line per check: *"✅ 1 command · ✅ 2 ran · ✅ 3 real name · ✅ 4
+approved once · ✅ 5 no duplicate."*
+
+---
+
 ## CLOSE
 
 **That's your robot.** 🎉
@@ -436,7 +496,8 @@ Say the sentence out loud:
 - **Default to 🟡** and always offer the graduation path. Never set 🟢 without them choosing it.
 - **Never print secrets** (`CRON_SECRET`, bot token, API keys, service_role) into the chat.
 - **Never hand them an error.** Fix the build yourself, then continue.
-- **Don't finish on "deployed."** Finish on **them typing `/[key]` and their phone buzzing.**
+- **Don't finish on "deployed."** Finish on **them typing `/[key]` and their phone buzzing** — then offer to drive the full test yourself.
+- **When driving their computer:** only ever tap the proposal your own test created. Never approve a pre-existing one — it may be real, and approving executes it.
 - One agent = one boring job. Keep it small. They can run this again.
 
 ---
