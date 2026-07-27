@@ -19,8 +19,11 @@ you can tune the four knobs freely and still never make the robot message a cust
 
 ```
 Copy agents/_template into agents/<name>, fill it from my `my-agent.md` — change ONLY
-the four 👉 knobs — and register it in `agents/registry.ts`: add one line to the AGENTS
-array (and one line to EXECUTORS only if my agent actually acts, not just drafts).
+the four 👉 knobs — then register it in `agents/registry.ts`:
+  1. one line in the AGENTS array, so it shows on the AI Employees tab;
+  2. one line in EXECUTORS, only if it ACTS rather than just drafts;
+  3. and if my agent is `daily`, one entry in the SCHEDULED array — WITHOUT this it
+     never runs and no Approve buttons ever arrive.
 Show me the diff before applying.
 ```
 
@@ -30,9 +33,15 @@ Show me the diff before applying.
 { key: '<name>', label: '<Your Agent>', emoji: '🤖', autonomyNote: '🟡 Daily: drafts X. You send it.' },
 ```
 
-**Draft-only agents (the default, and the safe one) need just that.** If your agent is
-one of the rare ones that *executes* something on approval, it also needs one line in
-the `EXECUTORS` map right below — otherwise an approved proposal errors with
-"no executor registered." registry.ts's own comment says the same.
+### ⚠️ Why three places, not one
+
+| Array | If you skip it |
+|---|---|
+| `AGENTS` | it works, but never appears on the AI Employees tab |
+| `EXECUTORS` | tapping ✅ Approve errors with *"no executor registered"* |
+| **`SCHEDULED`** | **it NEVER runs.** The morning cron only sweeps this array — your agent sits there silently forever |
+
+**Draft-only agents still need `SCHEDULED`** if they're `daily`. That's the #1 reason someone
+says *"I built it but nothing happened."* Check that array first, every time.
 
 That's it — nothing else in the repo moves. Review the diff, then say yes.
