@@ -35,7 +35,9 @@ Then wait until I say "lanes ready".
 ━━ STEP 3 · BUILD MY LANE ━━
 git checkout main && git pull. Read docs/lanes.md and find my row (ask my name).
 Then read what my lane needs:
-- TAB: docs/add-a-tab-prompt.md, app/page.tsx, app/_components/Stat.tsx, lib/records.ts
+- NEW TAB: docs/add-a-tab-prompt.md, app/page.tsx, app/_components/Stat.tsx, lib/records.ts
+- EXISTING TAB: that tab's current page, app/_components/Stat.tsx, lib/records.ts,
+  docs/add-a-tab-prompt.md
 - HEAD: agents/_template/README.md, agents/registry.ts, the example already in my
   folder, docs/ai-csuite-blueprint.md
 
@@ -44,7 +46,10 @@ has already added the menu and registry lines. If something outside my folder se
 to need changing, STOP and tell me. Don't add npm packages either.
 
 Create branch <my-name>/<lane>. Interview me ONE question at a time:
-- TAB: what I want to see (columns + 2–4 stat cards), and any status I care about.
+- NEW TAB: what I want to see (columns + 2–4 stat cards), and any status I care about.
+- EXISTING TAB: first tell me in 3 short lines what it shows today. Then ask what I
+  want to change: a column, a stat card, a filter, a status flag... Suggest 3
+  ideas from the real data if I'm not sure. Keep everything already there working.
 - HEAD: WHEN it fires (must include a number), what it LOOKS AT, and whether it
   SUGGESTS or just DOES. Anything that reaches a customer, moves money or can't be
   undone must be SUGGEST. Refuse if I pick DO for those.
@@ -52,7 +57,7 @@ Create branch <my-name>/<lane>. Interview me ONE question at a time:
 Build it inside my folder only, with helper files in a _parts/ folder inside my folder.
 
 Test it on the real data, safely:
-- TAB: open my tab on localhost in Chrome and show me a screenshot. If it's empty,
+- TAB (new or existing): open my tab on localhost in Chrome and show me a screenshot. If it's empty,
   insert 3–5 rows with MY category only, titles starting "EXAMPLE — ". Insert only.
 - HEAD: in a throwaway script OUTSIDE the repo, run my check() once against the
   real rows and show me what it WOULD propose. Don't create proposals and don't
@@ -68,6 +73,9 @@ Open the live team app in Chrome. I'll type the passcode myself. Confirm my tab 
 head shows up and screenshot it for me.
 For a HEAD: once the lead fires the brief, open the team group on web.telegram.org
 and show me my head's message. Don't tap Approve or Reject. I'll decide.
+
+Want another lane? Ask your lead to say "new lane". When they tell you
+"lanes ready", go back to STEP 3.
 
 RULES THE WHOLE TIME (I'm holding my team's database keys):
 - Never run supabase/schema.sql, `npm run import` or `npm run webhook:set`.

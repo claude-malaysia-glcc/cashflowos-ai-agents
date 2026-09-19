@@ -27,10 +27,14 @@ Then ask me ONE at a time, waiting for each answer:
 2. A name for the team's Telegram group.
 3. For each teammate, one at a time: their name, GitHub username, Telegram ID, and
    their lane, which is one of:
-   - a TAB: name + emoji + a fresh category string (NOT cash_in, cash_out, lead,
-     customer, content, task or doc), or
-   - a C-SUITE HEAD: Sales, Marketing, Finance or Ops. No two people on the same head.
-   Keep asking until I say "done".
+   - a NEW TAB: name + emoji + a fresh category string (NOT cash_in, cash_out,
+     lead, customer, content, task or doc)
+   - an EXISTING TAB to improve: any tab already in the menu (Leads, Cash In,
+     Tasks, the Dashboard...). Nobody needs to have built a tab before.
+   - a C-SUITE HEAD: Sales, Marketing, Finance or Ops
+   One person per lane: no two people on the same tab or head. If a teammate
+   doesn't know what they want, look at our data and suggest 3 lanes that fit,
+   and let them pick. Keep asking until I say "done".
 
 ━━ STEP 2 · TELEGRAM (Chrome, web.telegram.org) ━━
 I'm logged in already. Never type a login code or password. If Telegram asks for
@@ -70,6 +74,9 @@ git checkout main && git pull. Then in ONE commit:
   AGENTS, EXECUTORS and SCHEDULED, importing from the lane folder. Rewrite
   SCHEDULED as a multi-line array with one entry per line, and keep
   overdueInvoiceCheck working.
+- For every EXISTING TAB lane: create nothing. They own that tab's folder,
+  e.g. app/leads/. The Dashboard is the single file app/page.tsx, NOT the whole
+  app/ folder.
 - Write docs/lanes.md: a table of name → folder(s) they own → category or agent key.
 - npm run build must pass. Commit "team: claim lanes" and push to main.
 - Wait for the Vercel deploy to finish. Then fetch https://<my-app>/api/telegram.
@@ -96,6 +103,10 @@ git checkout main && git pull, then gh pr list. For each open PR, one at a time:
 If any BRIEF.md files came in, add those lines to the morning brief in
 app/api/cron-daily/route.ts using its existing pattern (never add a cron to
 vercel.json). Show me the diff, then commit and push.
+
+If I say "new lane" (someone finished and wants more, or changed their mind):
+ask me who and which lane, then claim it exactly like STEP 4, in its own commit
+on main. Push, and tell me: "Tell <name>: lanes ready."
 
 ━━ STEP 7 · FINISH (when I say "done") ━━
 git checkout main && git pull, npm run build, and wait for the deploy.
