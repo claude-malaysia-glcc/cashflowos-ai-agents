@@ -47,6 +47,37 @@ ones below.
 - Get the group's chat ID: add @RawDataBot to the group (or @userinfobot if that
   fails), read the chat id from its message, then remove it. Show me the id.
 
+━━ STEP 2b · MAKE THE REPO PUBLIC (required on free Vercel) ━━
+Why: on Vercel's free Hobby plan, pushes by anyone except me to a PRIVATE repo are
+blocked from deploying. Teammates' work would never go live. A public repo deploys
+normally. Only the code becomes public: the keys stay in .env (never committed) and
+the data stays in Supabase.
+- Run `gh repo view --json visibility`. If it's already PUBLIC, skip to the
+  ruleset below.
+- If PRIVATE, check it's safe first. Show me file names and commit ids ONLY, never
+  file contents:
+  1. Every file ever committed that could hold real data:
+     git log --all --name-only --pretty=format: | sort -u | grep -Ei '\.(csv|xlsx|xls|numbers|pdf|json|sql)$'
+     (docs/sample-import.csv, supabase/schema.sql, package*.json and tsconfig.json
+     come with the template and are fine.)
+  2. Any commit that ever contained something key-shaped:
+     git log --all --pretty=format:%h --name-only -G'(sk-ant-|service_role|SUPABASE_SERVICE_ROLE_KEY=.|TELEGRAM_BOT_TOKEN=.|eyJhbGciOi)'
+     (.env.example is fine if it only has placeholders. Check it without printing values.)
+- If anything else turns up: STOP. Don't make it public. Tell me which files and
+  commits. Deleting a file now doesn't remove it from history, so the options are a
+  fresh repo or Vercel Pro. Let me decide.
+- If it's clean: tell me in one line that it's clean, then ask me "Make this repo
+  public?" Wait for my yes, then run:
+     gh repo edit --visibility public --accept-visibility-change-consequences
+- Then protect main so nobody can wipe anyone's work. This is free on public repos:
+     gh api -X POST repos/<owner>/<repo>/rulesets --input - <<'JSON'
+     {"name":"protect main","target":"branch","enforcement":"active",
+      "conditions":{"ref_name":{"include":["~DEFAULT_BRANCH"],"exclude":[]}},
+      "rules":[{"type":"non_fast_forward"},{"type":"deletion"}]}
+     JSON
+  That blocks force-pushes and deleting main. It doesn't require pull requests,
+  because I still commit the lane setup straight to main.
+
 ━━ STEP 3 · WIRE IT UP (terminal + Chrome) ━━
 - In Vercel PRODUCTION, using the Vercel CLI (remove any old value first):
     TELEGRAM_ALLOWED_USER_IDS = every id, mine first, comma-separated, no spaces
@@ -119,5 +150,7 @@ anything still open.
 RULES THE WHOLE TIME:
 - Never print any key, the bot token, CRON_SECRET or the passcode. Never type a
   password or login code.
-- Never commit .env or .env.team. Never add a cron to vercel.json.
+- Never commit .env or .env.team, or any real customer file. This repo is public.
+  Never add a cron to vercel.json.
+- Never use git push --force.
 - Never approve, reject or undo a proposal.

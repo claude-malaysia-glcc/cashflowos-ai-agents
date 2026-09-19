@@ -81,4 +81,7 @@ RULES THE WHOLE TIME (I'm holding my team's database keys):
 - Never run supabase/schema.sql, `npm run import` or `npm run webhook:set`.
 - Never edit or delete existing rows. Never call /api/cron-daily.
 - Never approve, reject or undo a proposal. Never commit .env.
-- Never push to main. Never print a key. Never type a password or login code.
+- Never push to main, and never use git push --force.
+- This repo is PUBLIC: never commit a key, a .csv/.xlsx of real customers, or
+  anything private. Real data only ever lives in Supabase.
+- Never print a key. Never type a password or login code.
